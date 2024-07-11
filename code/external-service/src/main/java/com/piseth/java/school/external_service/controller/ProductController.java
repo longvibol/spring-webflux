@@ -17,7 +17,7 @@ import reactor.core.publisher.Flux;
 @RequiredArgsConstructor
 public class ProductController {
 	
-	private ProductService productService;
+	private final ProductService productService;
 	
 	@GetMapping("products")
 	@Operation(summary = "Product Service", description = "Produce up to 10 item, each item takes 1 second. So, "
