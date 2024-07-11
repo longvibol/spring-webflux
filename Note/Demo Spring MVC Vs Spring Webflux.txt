@@ -1,0 +1,289 @@
+Demo Spring MVC Vs Spring Webflux
+
+1. Class : DTO 
+
+@Data
+public class ResponseDTO {
+	
+	private LocalDate date;
+	private int result;
+	
+	public ResponseDTO(int result) {
+		this.result=result;
+		this.date = LocalDate.now();
+	}
+
+}
+
+
+2. Service MVC:
+
+@Service
+public class MathService {
+	
+	
+	// Create respond DTO : 10-07-2024 : 25
+	public ResponseDTO findSquare(int input) {
+		return new ResponseDTO(input*input);
+	}
+	
+	// list of object table: 10-07-2024 : 5 ;10-07-2024 : 10
+	// List is have unite index and element is change 
+	public List<ResponseDTO> multiplicationTable(int input){
+		// the same as loop from 1 to 10
+		return IntStream.rangeClosed(1, 10) 
+			.peek(x -> SleepUtil.sleepSecond(1)) // we use peek only for debug 
+			.peek(x -> System.out.println("Math Service is processing.." + x))
+			.map(x -> x * input)
+			.mapToObj(x -> new ResponseDTO(x))
+//			.collect(Collectors.toList()); in JAVA 11
+			.toList();
+			
+	}
+
+
+}
+
+2. Service Flux:
+
+@Service
+public class ReactiveMathService {
+
+	// we try to build lazy as much as posible 	
+	public Mono<ResponseDTO> findSquare(int input){
+		
+		return Mono.fromSupplier(() -> input*input)
+					.map(x -> new ResponseDTO(x));
+	}
+	
+	public Flux<ResponseDTO> multiplicationTable(int input){
+		return Flux.range(1, 10)
+				//.doOnNext(x -> SleepUtil.sleepSecond(1))
+				.delayElements(Duration.ofSeconds(1))
+				.doOnNext(x -> System.out.println("Reactive math Service is processing " +x))
+				.map(x -> new ResponseDTO(x *x));
+	}
+	
+	
+	// It buil the data sturcture List so it is not the reactive Style (it is blocking) 
+	public Flux<ResponseDTO> multiplicationTable2(int input){
+		List<ResponseDTO> list = IntStream.rangeClosed(1, 10)
+				.peek(x -> SleepUtil.sleepSecond(1)) 
+				.peek(x -> System.out.println("Math Service is processing.." + x))
+				.map(x -> x * input)
+				.mapToObj(x -> new ResponseDTO(x))
+				.toList();
+		
+		return Flux.fromIterable(list); // bad practice 
+	}
+}
+
+
+3: Controller : Reactive Stlye 
+
+@RestController
+@RequestMapping("reactive-math")
+public class ReactiveMathController {
+	
+	
+	@Autowired
+	private ReactiveMathService mathService;
+	
+	@GetMapping("square/{input}")
+	public Mono<ResponseDTO> findSquare(@PathVariable int input) {
+		return mathService.findSquare(input);
+	}
+	
+	/* MVC Style : 
+	@GetMapping("table/{input}")
+	public Flux<ResponseDTO> table(@PathVariable int input){
+		return mathService.multiplicationTable(input);
+	}
+	*/
+	
+	@GetMapping(value = "table/{input}", produces = org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE)
+	public Flux<ResponseDTO> table(@PathVariable int input){
+		return mathService.multiplicationTable(input);
+	}
+
+3: Controller : MVC 
+
+@RestController
+@RequestMapping("math")
+public class MathController {
+	
+	
+	@Autowired
+	private MathService mathService;
+	
+	@GetMapping("square/{input}")
+	public ResponseDTO findSquare(@PathVariable int input) {
+		return mathService.findSquare(input);
+	}
+	
+	
+	@GetMapping("table/{input}")
+	public List<ResponseDTO> table(@PathVariable int input){
+		return mathService.multiplicationTable(input);
+	}
+
+---------------------------------- Dependancy ----------------------------------
+
+<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-webflux</artifactId>
+		</dependency>
+
+<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

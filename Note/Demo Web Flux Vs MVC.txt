@@ -1,0 +1,101 @@
+Math Service:
+
+- square of number:
+
+	5 => 10-07-2024 : 25
+	6 => 10-07-2024 : 36
+
+- table of multiplication 
+	5 =>
+		10-07-2024 : 5
+		10-07-2024 : 10
+		10-07-2024 : 15
+		10-07-2024 : 20
+
+-- Traditional Style MVC : Time Consuming ពេលវាធ្វើការនៅ BackEnd អស់ហើយបានវាបង្ហាញជាលទ្ទផល​ (blocking) 
+-- Spring Webflux 
+
+-------------------------
+
+1. Crate DTO that have Date + Result (10-07-2024 : 25 ) what we want to show to out put = respond to out put 
+2. List is the data Structure វាទាញ Data អស់សិនបានវា រៀបចំជា List ហើយបញ្ជូនទៅ Out put 
+3. Flux វាជា Streamming Data ។ Data បញ្ជូនមកប៉ុន្មានវាបង្ហាញមកប៉ុននឹង ** When the subscriber cancele the process it will cancel the backEnd immidialy 
+
+** We build Pipe line for the Stream 
+
+Note: 
+
+
+-------------- Web service API 
+
+- In Java Reactive have two main item : Publisher and Subscriber 
+- in the demo : Publisher is BackEnd and Brower is the Subscriber 
+
+------------------- In Microservice : Service A call Service B 
+
+- Service A is publisher 
+- Service B is Subscriber 
+
+-----------------------
+
+***
+When we use tradition style : ពេលដែលយើង cancle process at the back end it still working ==> it make the system Stack need to restart again!
+
+
+-------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

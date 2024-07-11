@@ -1,0 +1,88 @@
+Spring Webflux: 4. External Service 
+
++ Web Client : Use to call other service 
+
+example : 
+we have service A and want call to Service B (it is at another system)
+
+So both service A and B communication via WebClient 
+
+----------------------------
+
+In the tradition style they use : They use REST Client 
+
+
+
+------------------First 
+
+We build the external service : 
+- Product Service 
+*product (id, description, price)
+
+- webflux playgorun (Traditional and webflux) 
+
+
+=================================
+
+First we build the controller for Product service 
+
+--- swagger ==> update new version call OpenAPI 
+
+
+URL
+
+http://localhost:8080/webjars/swagger-ui/index.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
