@@ -1,0 +1,86 @@
+Spring Webflux: 5. WebClient
+
+Have two service : 
+
+1. External Service (from other company that what we want to read)
+- check the OpenAPI from URL they provide 
+
+in application.propertiy
+
+spring.application.name=external-service
+
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.swagger-ui.enabled=true
+springdoc.swagger-ui.operations-sorter=alpha
+springdoc.swagger-ui.doc-expansion= none
+
+
+- check the url : 
+
+demo001/products
+
+http://localhost:7000/traditional/products
+
+
+2. Webflux-playground (our system )
+
+- We create DTO to get the response from external service : 
+
+
+Testing
+
+cmd>>
+curl http://localhost:7000/traditional/products
+
+or 
+
+
+curl -N http://localhost:7000/traditional/products
+
+------------block buy buffer : we use streaming ( we need serier life) 
+
+Serier life :
+
+[
+{
+"id": 1,
+"description": "Product_1",
+"price": 1
+},
+{
+"id": 2,
+"description": "Product_2",
+"price": 2
+},
+
+វាបង្ហាញមកជា JSON [] 
+
+@GetMapping(value="products/stream",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+	public Flux<Product> getProductsStream(){
+	return this.webClient.get()
+			.uri("/demo001/products")
+			.retrieve()
+			.bodyToFlux(Product.class)
+			.doOnNext(x -> log.info("Received: " + x))
+			;
+			
+	}
+
+
+
+
+----------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
