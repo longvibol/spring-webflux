@@ -28,5 +28,15 @@ public class ProductController {
 		return productService.getProduct()
 				.transform(Transformer.fluxLogger(path));
 	}
+	
+	@GetMapping("products/black")
+	@Operation(summary = "Product Service", description = "Produce up to 10 item, each item takes 1 second. So, "
+			+ "10 products will take 10 seconds.", tags = {"demo001"})
+	public Flux<Product> getProductsWithError(){
+		
+		String path = "demo001/products";
+		return productService.getProductWithError()
+				.transform(Transformer.fluxLogger(path));
+	}
 
 }

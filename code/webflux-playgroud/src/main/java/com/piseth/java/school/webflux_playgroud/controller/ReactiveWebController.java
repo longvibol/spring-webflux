@@ -36,9 +36,10 @@ public class ReactiveWebController {
 //		List<Product> list = this.restClient.get()		
 		
 	return this.webClient.get()
-			.uri("/demo001/products")
+			.uri("/demo001/products/black")
 			.retrieve()
 			.bodyToFlux(Product.class)
+			.onErrorComplete() // when meet error it will complete 
 			.doOnNext(x -> log.info("Received: " + x))
 			;
 			
@@ -47,12 +48,11 @@ public class ReactiveWebController {
 	@GetMapping(value="products/stream",produces = MediaType.TEXT_EVENT_STREAM_VALUE)
 	public Flux<Product> getProductsStream(){
 	return this.webClient.get()
-			.uri("/demo001/products")
+//			.uri("/demo001/products")
+			.uri("/demo001/products/black") // call with error method happend 
 			.retrieve()
 			.bodyToFlux(Product.class)
-			.doOnNext(x -> log.info("Received: " + x))
-			;
-			
+			.doOnNext(x -> log.info("Received: " + x));			
 	}
 
 }
