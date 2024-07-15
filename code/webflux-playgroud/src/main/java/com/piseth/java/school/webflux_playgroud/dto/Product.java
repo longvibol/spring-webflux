@@ -1,5 +1,13 @@
 package com.piseth.java.school.webflux_playgroud.dto;
 
-public record Product(int id, String description, int price) {
+import lombok.Data;
+
+@Data
+public class Product {
+	
+	private int id;
+	private String description;
+	private int price;
+	
 
 }

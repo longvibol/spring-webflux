@@ -11,7 +11,6 @@ import org.springframework.web.client.RestClient;
 import com.piseth.java.school.webflux_playgroud.dto.Product;
 
 import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Flux;
 
 @RestController
 @RequestMapping("traditional")

@@ -1,0 +1,450 @@
+Spring Webflux: 6. R2DBC Test Built-in Method
+
+1- Create initial scrip db for testing data 
+
+- have three table : customer_order; customer;  product;
+
+
+CREATE TABLE customer (
+  id int AUTO_INCREMENT primary key,
+  name VARCHAR(100),
+  email VARCHAR(100)
+);
+
+CREATE TABLE product (
+  id int AUTO_INCREMENT primary key,
+  description VARCHAR(100),
+  price int
+);
+
+CREATE TABLE customer_order (
+  order_id uuid default random_uuid() primary key,
+  customer_id int,
+  product_id int,
+  amount int,
+  order_date TIMESTAMP WITH TIME ZONE default CURRENT_TIMESTAMP,
+  foreign key (customer_id) references customer(id),
+  foreign key (product_id) references product(id)
+);
+
+------------------------------ Setup Enviroment Testing 
+
+1. Setup scan in main application: 
+
+@ComponentScan(basePackages = "com.piseth.java.school.webflux_playgroud.${sec}")
+@EnableR2dbcRepositories(basePackages = "com.piseth.java.school.webflux_playgroud.${sec}")
+
+2. add Scrip db: 
+- create add src/main/resource: data.sql 
+
+DROP TABLE IF EXISTS customer_order;
+DROP TABLE IF EXISTS customer;
+DROP TABLE IF EXISTS product;
+
+CREATE TABLE customer (
+  id int AUTO_INCREMENT primary key,
+  name VARCHAR(100),
+  email VARCHAR(100)
+);
+
+CREATE TABLE product (
+  id int AUTO_INCREMENT primary key,
+  description VARCHAR(100),
+  price int
+);
+
+CREATE TABLE customer_order (
+	
+/*which customer and what product they buy */
+
+  order_id uuid default random_uuid() primary key, 
+  customer_id int,
+  product_id int,
+  amount int,
+  order_date TIMESTAMP WITH TIME ZONE default CURRENT_TIMESTAMP,
+  foreign key (customer_id) references customer(id),
+  foreign key (product_id) references product(id)
+);
+
+INSERT INTO customer(name, email)
+VALUES
+  ('sam', 'sam@gmail.com'),
+  ('mike', 'mike@gmail.com'),
+  ('jake', 'jake@gmail.com'),
+  ('emily', 'emily@example.com'),
+  ('sophia', 'sophia@example.com'),
+  ('liam', 'liam@example.com'),
+  ('olivia', 'olivia@example.com'),
+  ('noah', 'noah@example.com'),
+  ('ava', 'ava@example.com'),
+  ('ethan', 'ethan@example.com');
+
+INSERT INTO product(description, price)
+VALUES
+  ('iphone 20', 1000),
+  ('iphone 18', 750),
+  ('ipad', 800),
+  ('mac pro', 3000),
+  ('apple watch', 400),
+  ('macbook air', 1200),
+  ('airpods pro', 250),
+  ('imac', 2000),
+  ('apple tv', 200),
+  ('homepod', 300);
+
+-- Order 1: sam buys an iphone 20 & iphone 18
+INSERT INTO customer_order (customer_id, product_id, amount, order_date)
+VALUES
+  (1, 1, 950, CURRENT_TIMESTAMP),
+  (1, 2, 850, CURRENT_TIMESTAMP);
+
+-- Order 2: mike buys an iphone 20 and mac pro
+INSERT INTO customer_order (customer_id, product_id, amount, order_date)
+VALUES
+  (2, 1, 975, CURRENT_TIMESTAMP),
+  (2, 4, 2999, CURRENT_TIMESTAMP);
+
+-- Order 3: jake buys an iphone 18 & ipad
+INSERT INTO customer_order (customer_id, product_id, amount, order_date)
+VALUES
+  (3, 2, 750, CURRENT_TIMESTAMP),
+  (3, 3, 775, CURRENT_TIMESTAMP);
+
+
+--------------
+
+3. Create class: com.piseth.java.school.webflux_playgroud.sec002;
+
+- Customer:
+
+public record Customer(int id, String name, String email) {
+
+}
+
+- CustomerOrder: 
+
+public record CustomerOrder(String uuid, int customerId, int productId, int amount, Instant orderDate ) {
+
+}
+
+------------ Search Method Qurey 
+
+https://docs.spring.io/spring-data/relational/reference/r2dbc/query-methods.html
+
+Example: 
+
+public interface CustomerRepository extends ReactiveCrudRepository<Customer, Integer>{
+	
+	Flux<Customer> findByName(String name);
+	
+	// return multiple customer 
+	
+	Flux<Customer> findByNameStartingWith(String name);
+
+	
+}
+
+
+------------- testing 
+
+@Test
+	void findByNameStartingWith() {
+		customerRepository.findByNameStartingWith("e")
+		.doOnNext(t ->log.info("Received: {}",t))
+		.as(StepVerifier::create)// style Method reference
+		.assertNext(t -> Assertions.assertEquals("emily", t.getName()))
+		.assertNext(t -> Assertions.assertEquals("ethan", t.getName()))
+		.expectComplete()
+		.verify();
+	}
+
+
+===============================================
+
+
+How to do testing with Insert Method 
+
+1. Think about the 
+
+ពេលដែល Record inside the database it have unit id -> ចឹងមុននឹងយើងធ្វើតេស្តទៅលើ Insert into database 
+យើងគ្រាន់តែបោះតែ Object ចូលទៅ (Name and email) តែពេលវាចូលក្នុង DB វានឹងបង្កើត auto Id ខ្លួនឯង
+
+example:
+
+@Test
+	//testing with insert into data base 
+	void insertCustomer() {
+		Customer customer = new Customer();
+		customer.setName("vibol");
+		customer.setEmail("test@gmail.com");
+		
+		customerRepository.save(customer)
+			.as(StepVerifier::create)
+			.assertNext(t -> Assertions.assertNotNull(t.getId()))
+			.expectComplete()
+			.verify();
+		
+		customerRepository.count()
+			.as(StepVerifier::create)
+			.assertNext(t -> Assertions.assertEquals(11, t))
+			.expectComplete()
+			.verify();		
+		
+	}
+------------------- Testing Delete method 
+
+
+1. Method one: we create setup environment (when run the unite test will clear all the data first) 
+
+@BeforeEach
+	void setup() {
+		// how to test delete method 
+		// clear all data 
+		// insert data 
+	}
+
+2. Method two : we use insert and testing delete in one Method 
+
+@Test
+	//testing with insert into data base 
+	void insertAndDeleteCustomer() {
+		Customer customer = new Customer();
+		customer.setName("vibol");
+		customer.setEmail("test@gmail.com");
+		
+		// Insert
+		
+		customerRepository.save(customer)
+			.as(StepVerifier::create)
+			.assertNext(t -> Assertions.assertNotNull(t.getId()))
+			.expectComplete()
+			.verify();
+		
+		customerRepository.count()
+			.as(StepVerifier::create)
+			.assertNext(t -> Assertions.assertEquals(11, t))
+			.expectComplete()
+			.verify();		
+		
+		// Delete 
+		customerRepository.deleteById(11) // we delete customer Id =11
+			.then(customerRepository.count())
+			.as(StepVerifier::create)
+			.assertNext(t -> Assertions.assertEquals(10, t))
+			.expectComplete()
+			.verify();	
+			
+		
+		
+		
+	}
+
+
+--------------------------------
+Method :
+
+
+Testing Update : យើងនឹងទាញ Record​ មួយចេញពី Database then we will update sth (name or email)
+then we will save the record. 
+
+Example:
+
+@Test
+	void updateCustomer() {
+		customerRepository.findById(4)
+			.doOnNext(t -> t.setName("Dara")) // this point it is in Memory (update we use method Doonnext
+			.flatMap(t -> customerRepository.save(t)) // here we save to db back but it is return Mono<Mono<Customer>> 
+			.as(StepVerifier::create)
+			.assertNext(t -> Assertions.assertEquals("Dara", t.getName()))
+			.expectComplete()
+			.verify();		
+		
+	}
+
+
+------------------------
+
+Assignment : Create Get Producte which prive is between 500 to 1000 
+then create unite test 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
