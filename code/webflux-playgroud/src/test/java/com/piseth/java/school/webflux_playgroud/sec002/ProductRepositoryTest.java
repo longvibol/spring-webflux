@@ -32,13 +32,13 @@ public class ProductRepositoryTest extends AbstractTest{
 	@Test
 	void findByPagination() {
 		
-		PageRequest pageRequest = PageRequest.of(0, 3).withSort(Sort.by("price").ascending());
+		PageRequest pageRequest = PageRequest.of(1, 3).withSort(Sort.by("price").ascending());
 		
 		productRepository.findBy(pageRequest)
 		.as(StepVerifier::create)
-		.assertNext(t -> assertEquals(200, t.getPrice()))
-		.assertNext(t -> assertEquals(250, t.getPrice()))
-		.assertNext(t -> assertEquals(300, t.getPrice()))
+		.assertNext(t -> assertEquals(400, t.getPrice()))
+		.assertNext(t -> assertEquals(750, t.getPrice()))
+		.assertNext(t -> assertEquals(800, t.getPrice()))
 		.expectComplete()
 		.verify();
 		

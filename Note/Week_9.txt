@@ -1,0 +1,204 @@
+Assignment : Create Get Producte which prive is between 500 to 1000 
+then create unite test 
+
+
+INSERT INTO product(description, price)
+VALUES
+  ('iphone 20', 1000),
+  ('iphone 18', 750),
+  ('ipad', 800),
+  ('mac pro', 3000),
+  ('apple watch', 400),
+  ('macbook air', 1200),
+  ('airpods pro', 250),
+  ('imac', 2000),
+  ('apple tv', 200),
+  ('homepod', 300);
+
+------------
+
+1. Create class : Product 
+
+
+@Data
+@Table(name ="product")
+public class Product {
+	
+	@Id
+	private int id;
+	private String description;
+	private int price;
+	
+
+}
+2. ProductRepository
+
+
+@Repository
+public interface ProductRepository extends ReactiveCrudRepository<Product, Integer>{
+
+	// we search in sprint method qurey then we follow the style 	
+	Flux<Product> findByPriceBetween(int start, int end);
+	
+	
+	Flux<Product> findBy(Pageable pageable); // findAllBy()
+	
+}
+
+3. ProductRepositoryTest 
+
+@Test
+	void findByPagination() {
+		
+		PageRequest pageRequest = PageRequest.of(1, 3).withSort(Sort.by("price").ascending());
+		
+		productRepository.findBy(pageRequest)
+		.as(StepVerifier::create)
+		.assertNext(t -> assertEquals(400, t.getPrice()))
+		.assertNext(t -> assertEquals(750, t.getPrice()))
+		.assertNext(t -> assertEquals(800, t.getPrice()))
+		.expectComplete()
+		.verify();
+		
+	}
+
+----------------
+
+How to Anable Qurey code : 
+
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest(properties = {"sec=sec002","logging.level.org.springframework.r2dbc=DEBUG"})
+public class AbstractTest {
+	
+	// we don't want to write it many time that why we use this abstractest and other class can extend from it 
+
+}
+
+
+-----------------------------------------
+
+Complex Qurey : We use Raw Qurey 
+
+Because in R2DBC it does not have oneToMany or Many to Many nos te. 
+It is focus on : Performance and scalability 
+
+Example:
+
+INSERT INTO customer_order (customer_id, product_id, amount, order_date)
+
+------------------------- 
+
+* Repository : CustomerOrderRepository : JOIN Colum 
+
+public interface CustomerOrderRepository extends ReactiveCrudRepository<CustomerOrder, String> {
+	
+	//want to get all products which ordered by one customer name 
+	
+	@Query("""
+			SELECT p.* 
+			FROM product as p 
+			INNER JOIN customer_order as co ON p.id = co.product_id
+			INNER JOIN customer as c ON c.id = co.customer_id	
+			WHERE c.name = :customerName
+			""")
+	// at the end we will get table name p =product (and that why we use Flux<Product> return 
+	
+	Flux<Product> findAllProductsByCustomerName(String customerName);
+
+}
+
+
+------------------------------ Projection (we want to do report from each table)
+យើងចង់ទាញទិន្នន័យពី table មួយដូចជា colom A in table A, Colum B in table B...… To do report 
+
+Example: 
+we want:
+
+orderId (customer order) 
+customerName (customer table) 
+productName (table product )
+price ( customer Order)
+orderDate ( customer Order)
+
+
+==> getorderByproduct
+
+------------------------------------- we want to know witch product it the top buy 
+
+Step to crete :
+
+1. Create dto class 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
