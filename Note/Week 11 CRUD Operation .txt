@@ -1,0 +1,231 @@
+Week 11 CRUD Operation 
+
+GET	:	Get all
+GET	:	Get By Id
+POST	: 	Save customer 
+PUT	:	Update customer by Id
+DELETE	:	Delete customer by Id
+
+------------
+DELET
+When it delete it shoule be show 404 not found 
+
+GET 
+by id should be Internal Error 500 
+
+------------------------
+
+1. Class CustomerMapper : where we convert from Input and output 
+
+
+@Component
+//This class CustomerMapper = CustomerDTO what we want to show to outside 
+public class CustomerMapping {
+
+	// toCustomer is the method convert from CustomerDTO to customer  
+	public Customer toCustomer(CustomerDTO dto) {
+		Customer customer = new Customer();
+		customer.setName(dto.getName());
+		customer.setEmail(dto.getEmail());		
+		return customer;
+	}
+	
+	
+	//toCustomerDTO is the method convert from Customer to CustomerDTO
+	public CustomerDTO toCustomerDTO(Customer customer) {
+		
+		CustomerDTO dto = new CustomerDTO();
+		dto.setId(customer.getId());
+		dto.setName(customer.getName());
+		dto.setEmail(customer.getEmail());
+		
+		return dto;
+		
+	}
+	
+	
+}
+
+-------------------------------
+
+
+2: Class CustomerDTO (support our entity : intermidate) 
+
+// We create this CustomerDTO becuae we want the middle object that can convert from input and output 
+@Data
+public class CustomerDTO {
+
+	private int id;
+	private String name;
+	private String email;
+}
+
+
+-------------------------------------
+
+3. our real Entity : 
+
+@Data
+@Table(name = "customer")
+public class Customer {
+	@Id
+	private int id;
+	private String name;
+	private String email;
+}
+
+
+---------------------------------
+
+4. where we use R2DB talk to DB (interface create )
+
+
+
+public interface CustomerRepository extends ReactiveCrudRepository<Customer, Integer>{
+
+}
+
+
+--------------------------
+
+5. Service : our method want to do CRUD operation 
+
+@Service
+public class CustomerService {
+	
+	@Autowired
+	private CustomerRepository customerRepository;
+	
+	@Autowired
+	CustomerMapping customerMapping;
+	
+	public Flux<CustomerDTO> getAll(){
+		return customerRepository.findAll()
+//			.map(c -> customerMapping.toCustomerDTO(c));
+			.map(customerMapping::toCustomerDTO);  // Method Reference : we call the call then implement the methode 
+	}
+	
+	public Mono<CustomerDTO> getById(Integer customerId){
+		return customerRepository.findById(customerId)
+					.map(customerMapping::toCustomerDTO);
+	}
+	
+	public Mono<CustomerDTO> saveCustomer(Mono<CustomerDTO> mono){
+		//Save use POST Method from Rest : Neet to convert from outside(customerDTO to inside (customer-our entitiy) 
+		return mono.map(c -> customerMapping.toCustomer(c))
+			.flatMap(c -> customerRepository.save(c))
+			.map(c -> customerMapping.toCustomerDTO(c));
+			
+	}
+	
+	public Mono<CustomerDTO> updateCustomer(Integer customerId, Mono<CustomerDTO> mono){
+		return customerRepository.findById(customerId) // we support we get the entity from the DB
+				.flatMap(entity -> mono) // we update the entity we get from DB to new request update from Input 
+				// after that we get <Mono<CustomerDTO>
+				.map(c -> customerMapping.toCustomer(c)) // we get Mono<Customer> 
+		
+				// we want to replace into DB but it do not have id yet 
+				.doOnNext(c -> c.setId(customerId))  // style JPA: this extend ReativeCrudRepostitoy if it don't have ID it will create new ID
+				.flatMap(c ->customerRepository.save(c))
+				.map(c -> customerMapping.toCustomerDTO(c));				
+				
+	}
+	
+	public Mono<Void> deleteCustomerById(Integer customerId){
+		return customerRepository.findById(customerId)
+			.flatMap(c ->customerRepository.delete(c));
+	}
+
+------------------***************---------------
+
+Importance our Controller:
+
+@RestController
+@RequestMapping("customers")
+public class CustomerController {
+	
+	@Autowired
+	CustomerService customerService;
+	
+	@GetMapping
+	Flux<CustomerDTO> getAll(){
+		return customerService.getAll();
+	}
+	
+	@GetMapping("{customerId}")
+	Mono<CustomerDTO> getById(@PathVariable Integer customerId){
+		return customerService.getById(customerId);
+	}
+	
+	@PostMapping
+	Mono<CustomerDTO> saveCustomer(@RequestBody Mono<CustomerDTO> mono){
+		return customerService.saveCustomer(mono);
+	}
+	
+	@PutMapping("{customerId}")
+	Mono<CustomerDTO> updateCustomer(@PathVariable Integer customerId, @RequestBody Mono<CustomerDTO> mono){
+		return customerService.updateCustomer(customerId, mono);
+	}
+	
+	
+	@DeleteMapping("{customerId}")
+	Mono<Void> deleteCustomerById(@PathVariable Integer customerId){
+		return customerService.deleteCustomerById(customerId);
+	}
+	
+	
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
