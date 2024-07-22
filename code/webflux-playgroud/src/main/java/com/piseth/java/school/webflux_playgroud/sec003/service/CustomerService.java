@@ -1,6 +1,10 @@
 package com.piseth.java.school.webflux_playgroud.sec003.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.piseth.java.school.webflux_playgroud.sec003.dto.CustomerDTO;
@@ -24,6 +28,25 @@ public class CustomerService {
 //			.map(c -> customerMapping.toCustomerDTO(c));
 			.map(customerMapping::toCustomerDTO);  // Method Reference : we call the call then implement the methode 
 	}
+	
+	public Flux<CustomerDTO> getCustomers(int pageNumber, int pageSize){		
+		Pageable pageable = PageRequest.of(pageNumber -1, pageSize);
+		//human we think it start with page number 1 but inside it is start with Zero page 		
+		return customerRepository.findBy(pageable)				
+			.map(customerMapping::toCustomerDTO);   
+	}
+	
+	public Mono<Page<CustomerDTO>> getCustomers2(int pageNumber, int pageSize){		
+		Pageable pageable = PageRequest.of(pageNumber -1, pageSize);
+		return customerRepository.findBy(pageable)
+				.map(customerMapping::toCustomerDTO)
+				.collectList()
+				.zipWith(customerRepository.count())
+				.map(res -> new PageImpl<>(res.getT1(), pageable, res.getT2()));	
+		// We need three component to return the PageImpl : 
+		
+	}
+	
 	
 	public Mono<CustomerDTO> getById(Integer customerId){
 		return customerRepository.findById(customerId)
@@ -51,9 +74,9 @@ public class CustomerService {
 				
 	}
 	
-	public Mono<Void> deleteCustomerById(Integer customerId){
-		return customerRepository.findById(customerId)
-			.flatMap(c ->customerRepository.delete(c));
+	public Mono<Boolean> deleteCustomerById(Integer customerId){
+		return customerRepository.deleteCustomerById(customerId);
+			
 	}
 	
 	

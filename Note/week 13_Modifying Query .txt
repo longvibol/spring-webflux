@@ -1,0 +1,150 @@
+Modifying Query 
+
+Example Delete Mapping Method :
+
+
+- https://docs.spring.io/spring-data/relational/reference/r2dbc/query-methods.html
+
++Controller: 
+
+@PutMapping("{customerId}")
+	Mono<ResponseEntity<CustomerDTO>> updateCustomer(@PathVariable Integer customerId, @RequestBody Mono<CustomerDTO> mono){
+		return customerService.updateCustomer(customerId, mono)
+				.map(dto -> ResponseEntity.ok(dto))
+				.defaultIfEmpty(ResponseEntity.noContent().build());
+	}
++ Service
+
+public Mono<Boolean> deleteCustomerById(Integer customerId){
+		return customerRepository.deleteCustomerById(customerId);
+			
+	}
++ Customer Modifying Query in Update
+
+@Modifying
+	@Query("DELETE FROM customer WHERE id= :id")
+	Mono<Boolean> deleteCustomerById(Integer id);
+
+
+
+---------------------------------------------------------
+Pagination : 
+
+Example on pagination:
+
++ Repository 
+
+public interface CustomerRepository extends ReactiveCrudRepository<Customer, Integer>{
+	
+	Flux<Customer> findBy(Pageable pageable);
+	
+}
+
+
+
++ Service
+
+public Flux<CustomerDTO> getCustomers(int pageNumber, int pageSize){		
+		Pageable pageable = PageRequest.of(pageNumber -1, pageSize);
+		//human we think it start with page number 1 but inside it is start with Zero page 		
+		return customerRepository.findBy(pageable)				
+			.map(customerMapping::toCustomerDTO);   
+	}
+	
+	public Mono<Page<CustomerDTO>> getCustomers2(int pageNumber, int pageSize){		
+		Pageable pageable = PageRequest.of(pageNumber -1, pageSize);
+		return customerRepository.findBy(pageable)
+				.map(customerMapping::toCustomerDTO)
+				.collectList()
+				.zipWith(customerRepository.count())
+				.map(res -> new PageImpl<>(res.getT1(), pageable, res.getT2()));	
+		// We need three component to return the PageImpl : 
+		
+	}
+
+
++ Controller : 
+
+
+@GetMapping("paginated")
+	Flux<CustomerDTO> getCustomers(@RequestParam int number, @RequestParam int size){
+		//customers/paginated?number=2&size=5		
+		return customerService.getCustomers(number, size);
+	}
+	
+	@GetMapping("paginated2")
+	Mono<Page<CustomerDTO>> getCustomers2(@RequestParam int number, @RequestParam int size){
+		return customerService.getCustomers2(number, size);
+	}
+
+
+============ 
+
+Website: Converting List to Page Using Spring Data JPA (search keywords) 
+
+https://www.baeldung.com/spring-data-jpa-convert-list-page 
+
+
+
+public Page<Customer> getCustomers(int page, int size) {
+
+    Pageable pageRequest = createPageRequestUsing(page, size);
+
+    List<Customer> allCustomers = customerRepository.findAll();
+    int start = (int) pageRequest.getOffset();
+    int end = Math.min((start + pageRequest.getPageSize()), allCustomers.size());
+
+    List<Customer> pageContent = allCustomers.subList(start, end);
+    return new PageImpl<>(pageContent, pageRequest, allCustomers.size());
+}
+
+
+
+-----------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
