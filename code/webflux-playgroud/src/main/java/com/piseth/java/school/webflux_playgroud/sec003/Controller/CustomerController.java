@@ -48,7 +48,7 @@ public class CustomerController {
 	Mono<ResponseEntity<CustomerDTO>> getById(@PathVariable Integer customerId){
 		return customerService.getById(customerId)
 				.map(dto -> ResponseEntity.ok(dto))
-				.defaultIfEmpty(ResponseEntity.noContent().build());
+				.defaultIfEmpty(ResponseEntity.notFound().build());
 	}
 	
 	@PostMapping
@@ -60,7 +60,7 @@ public class CustomerController {
 	Mono<ResponseEntity<CustomerDTO>> updateCustomer(@PathVariable Integer customerId, @RequestBody Mono<CustomerDTO> mono){
 		return customerService.updateCustomer(customerId, mono)
 				.map(dto -> ResponseEntity.ok(dto))
-				.defaultIfEmpty(ResponseEntity.noContent().build());
+				.defaultIfEmpty(ResponseEntity.notFound().build());
 	}
 	
 	
