@@ -1,0 +1,68 @@
+Week 16- Validation 
+
+- Want to good at Jave need to know:
+
+Generices, Function Progrmming, Stream API, Java Reactive, Spring Webflux 
+
+- there are many way to do validation 
+1. Use Bean Validation from Spring boot
+2. Our customer Validation 
+
+=========================== 
+
+Problem Detail:
+
+Standardized format for problem details:
+
+-RFC7807 / RFC9457
+-Structure Error Response
+-Machine/Human readable
+
+-----------------------------
+Properties: what we want to return back for the standar should have 
+
+- type: A link to documentation for the caller to read more about the problem. It is not provided, "about:blank
+- title: Human readable summary of the problem 
+- status: HTTP status code 
+- detail: Detail message specific to the problem 
+- instance: The URI which caused the problem (spring will create for us)
+
+-----------------------------
+
+* Bean Validation 
+
+-----------------------------
+
+Exception:
+- Customer Not Found
+- Invalid Input
+- Name is required
+- Valid email is required 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
